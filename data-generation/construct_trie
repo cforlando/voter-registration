@@ -1,0 +1,89 @@
+#!/usr/bin/env pypy
+# vi: set filetype=python :
+
+import sys
+from collections import namedtuple
+import json
+import re
+import os
+
+
+def entrie(container, key, value):
+    key = re.sub(r"\W", "", key.lower()).replace("_", "")
+    if key:
+        return _entrie(container, key, value)
+
+def _entrie(container, key, value):
+    """Make a trie, in which each character in key leads to a dict of remaining
+    letters of key, and at the end, the empty-string key leads to a set of
+    values that sit at that location"""
+
+    if len(key) == 0:
+        if "" in container:
+            if value not in container[""]:
+                container[""].append(value)
+        else:
+            container[""] = [ value ]
+
+    else:
+        fragment = key[0]
+        if fragment not in container:
+            container[fragment] = {}
+
+        _entrie(container[fragment], key[1:], value)
+
+
+def process():
+    year_grouped_trie_to_voter_id = {}
+
+    for line in sys.stdin:
+
+        fields = [s.strip() for s in line.split("\t")]
+        try:
+            r = registration(* fields)
+        except TypeError:
+            print("field mismatch!")
+            for k, v in zip(field_names, fields):
+                print("\t{0} = {1!r}".format(k, v))
+            # raise
+            continue
+
+        if r.withheld.lower() != 'n':
+                continue
+
+        birth_year = int(r.birthdate.split("/")[-1])
+        voter_id = int(r.voterid)
+        
+        try:
+            d = year_grouped_trie_to_voter_id[birth_year]
+        except KeyError:
+            d = {}
+            year_grouped_trie_to_voter_id[birth_year] = d
+
+        entrie(d, r.namefirst, voter_id)
+        entrie(d, r.namemiddle, voter_id)
+        entrie(d, r.namelast, voter_id)
+        for word in r.residenceline1.split():
+            entrie(d, word, voter_id)
+        for word in r.residenceline2.split():
+            entrie(d, word, voter_id)
+        entrie(d, r.mailingline1, voter_id)
+        entrie(d, r.phonenumber, voter_id)
+
+
+    # Assume we are called one year at a time, and we only receive one year in
+    # stdin.
+    assert len(year_grouped_trie_to_voter_id.keys()) == 1
+
+    for year in year_grouped_trie_to_voter_id:
+        with open(os.path.join(sys.argv[1], "trie-to-voterid-for-birth-year-{0}.json".format(birth_year)), "w") as f:
+            json.dump(year_grouped_trie_to_voter_id[year], f, separators=(',', ':'))
+
+
+
+field_names = [ 'countycode', 'voterid', 'namelast', 'namesuffix', 'namefirst', 'namemiddle', 'withheld', 'residenceline1', 'residenceline2', 'residencecity', 'residenceUNKNOWNDATA', 'residencezipcode', 'mailingline1', 'mailingline2', 'mailingline3', 'mailingcity', 'mailingUNKNOWNDATA', 'mailingzipcode', 'mailingcountry', 'gender', 'race', 'birthdate', 'registrationdate', 'party', 'precinct', 'precinctgroup', 'precinctsplit', 'precinctsuffix', 'voterstatus', 'congressionaldictrict', 'schoolboarddistrict', 'districtUNKNOWNDATA1', 'districtUNKNOWNDATA2', 'districtUNKNOWNDATA3', 'phoneareacode', 'phonenumber', 'phonenumberext', 'emailaddress']
+registration = namedtuple("registration", field_names)
+
+
+if __name__ == "__main__":
+    process()

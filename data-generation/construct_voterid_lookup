@@ -1,0 +1,51 @@
+#!/usr/bin/env pypy
+# vi: set filetype=python :
+
+import sys
+from collections import namedtuple
+import json
+import re
+import os
+
+def process():
+
+    records_hashes_by_year = {}
+
+    for line in sys.stdin:
+
+        fields = [s.strip() for s in line.split("\t")]
+        try:
+            r = registration(* fields)
+        except TypeError:
+            print("field mismatch!")
+            for k, v in zip(field_names, fields):
+                print("\t{0} = {1!r}".format(k, v))
+            # raise
+            continue
+
+        if r.withheld.lower() != 'n':
+                continue
+
+        birth_year = int(r.birthdate.split("/")[2])
+        voter_id = int(r.voterid)
+
+        if birth_year not in records_hashes_by_year:
+            records_hashes_by_year[birth_year] = {}
+
+        records_hashes_by_year[birth_year][voter_id] = (r.namefirst + " " + r.namemiddle + (" " if r.namemiddle else "") + r.namelast + (" " if r.namesuffix else "") + r.namesuffix,
+                r.residenceline1 + " " + r.residenceline2 + " " + r.residencecity + " " + r.residencezipcode,
+                r.birthdate, r.party, r.voterstatus, r.phoneareacode + ("-" if r.phoneareacode else "") + r.phonenumber, r.phonenumberext, r.emailaddress, r.countycode, )
+
+
+    for birth_year in records_hashes_by_year:
+        distinguishing_name = sys.argv[2] # data-temporary/voterids-1000.txt
+        distinguishing_name = distinguishing_name.rsplit("-", 1)[1].split(".", 1)[0]
+        with open(os.path.join(sys.argv[1], "voter_info_list_grouped_by_voterid-{0}-year-{1}.json".format(distinguishing_name, birth_year)), "w") as f:
+            json.dump(records_hashes_by_year[birth_year], f, separators=(',', ':'))
+
+
+field_names = [ 'countycode', 'voterid', 'namelast', 'namesuffix', 'namefirst', 'namemiddle', 'withheld', 'residenceline1', 'residenceline2', 'residencecity', 'residenceUNKNOWNDATA', 'residencezipcode', 'mailingline1', 'mailingline2', 'mailingline3', 'mailingcity', 'mailingUNKNOWNDATA', 'mailingzipcode', 'mailingcountry', 'gender', 'race', 'birthdate', 'registrationdate', 'party', 'precinct', 'precinctgroup', 'precinctsplit', 'precinctsuffix', 'voterstatus', 'congressionaldictrict', 'schoolboarddistrict', 'districtUNKNOWNDATA1', 'districtUNKNOWNDATA2', 'districtUNKNOWNDATA3', 'phoneareacode', 'phonenumber', 'phonenumberext', 'emailaddress']
+registration = namedtuple("registration", field_names)
+
+if __name__ == "__main__":
+    process()

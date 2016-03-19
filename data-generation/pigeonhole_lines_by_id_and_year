@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# vi: set filetype=python :
+
+import sys
+import os
+from collections import namedtuple
+
+
+field_names = [ 'countycode', 'voterid', 'namelast', 'namesuffix', 'namefirst', 'namemiddle', 'withheld', 'residenceline1', 'residenceline2', 'residencecity', 'residenceUNKNOWNDATA', 'residencezipcode', 'mailingline1', 'mailingline2', 'mailingline3', 'mailingcity', 'mailingUNKNOWNDATA', 'mailingzipcode', 'mailingcountry', 'gender', 'race', 'birthdate', 'registrationdate', 'party', 'precinct', 'precinctgroup', 'precinctsplit', 'precinctsuffix', 'voterstatus', 'congressionaldictrict', 'schoolboarddistrict', 'districtUNKNOWNDATA1', 'districtUNKNOWNDATA2', 'districtUNKNOWNDATA3', 'phoneareacode', 'phonenumber', 'phonenumberext', 'emailaddress']
+registration = namedtuple("registration", field_names)
+
+
+voterid_files = {}
+birthyear_files = {}
+
+for line in sys.stdin:
+    fields = [s.strip() for s in line.split("\t")]
+    try:
+        r = registration(* fields)
+    except TypeError:
+        print("field mismatch!")
+        for k, v in zip(field_names, fields):
+            print("\t{0} = {1!r}".format(k, v))
+        # raise
+        continue
+
+    if r.withheld.lower() != 'n':
+            continue
+
+    birth_year = int(r.birthdate.split("/")[-1])
+    voter_id = int(r.voterid)
+
+    voterid_group = int(voter_id // 100000)
+    if voterid_group not in voterid_files:
+        voterid_files[voterid_group] = open(os.path.join(sys.argv[1], "voterids-{0}.txt".format(voterid_group)), "w")
+    voterid_files[voterid_group].write(line)
+
+    if birth_year not in birthyear_files:
+        birthyear_files[birth_year] = open(os.path.join(sys.argv[1], "birthyears-{0}.txt".format(birth_year)), "w")
+    birthyear_files[birth_year].write(line)
+
+for f in birthyear_files.values(): f.close()
+for f in voterid_files.values(): f.close()
