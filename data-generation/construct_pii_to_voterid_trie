@@ -1,11 +1,17 @@
 #!/usr/bin/env pypy
 # vi: set filetype=python :
+#GPL2, Copyright 2015 Chad MILLER  http://chad.org/
+
+"""
+Make a Trie out of the records PII, mapping name and address to voterid.
+"""
+
 
 import sys
-from collections import namedtuple
 import json
 import re
 import os
+from florida_dept_of_elections import registration, registration_field_names
 
 
 def entrie(container, key, value):
@@ -34,7 +40,7 @@ def _entrie(container, key, value):
 
 
 def process():
-    year_grouped_trie_to_voter_id = {}
+    birthday_grouped_trie_to_voter_id = {}
 
     for line in sys.stdin:
 
@@ -43,7 +49,7 @@ def process():
             r = registration(* fields)
         except TypeError:
             print("field mismatch!")
-            for k, v in zip(field_names, fields):
+            for k, v in zip(registration_field_names, fields):
                 print("\t{0} = {1!r}".format(k, v))
             # raise
             continue
@@ -51,14 +57,14 @@ def process():
         if r.withheld.lower() != 'n':
                 continue
 
-        birth_year = int(r.birthdate.split("/")[-1])
+        birthday = ".".join(r.birthdate.split("/"))
         voter_id = int(r.voterid)
         
         try:
-            d = year_grouped_trie_to_voter_id[birth_year]
+            d = birthday_grouped_trie_to_voter_id[birthday]
         except KeyError:
             d = {}
-            year_grouped_trie_to_voter_id[birth_year] = d
+            birthday_grouped_trie_to_voter_id[birthday] = d
 
         entrie(d, r.namefirst, voter_id)
         entrie(d, r.namemiddle, voter_id)
@@ -71,18 +77,19 @@ def process():
         entrie(d, r.phonenumber, voter_id)
 
 
-    # Assume we are called one year at a time, and we only receive one year in
+    # Assume we are called one birthday at a time, and we only receive one birthday in
     # stdin.
-    assert len(year_grouped_trie_to_voter_id.keys()) == 1
+    assert len(birthday_grouped_trie_to_voter_id.keys()) == 1, birthday_grouped_trie_to_voter_id.keys()
 
-    for year in year_grouped_trie_to_voter_id:
-        with open(os.path.join(sys.argv[1], "trie-to-voterid-for-birth-year-{0}.json".format(birth_year)), "w") as f:
-            json.dump(year_grouped_trie_to_voter_id[year], f, separators=(',', ':'))
+    for birthday in birthday_grouped_trie_to_voter_id:
+        year = birthday[-4:]
+        try:
+            os.makedirs(os.path.join(sys.argv[1], year))
+        except OSError:
+            pass
+        with open(os.path.join(sys.argv[1], year, "trie-to-voterid-for-birthday-{0}.json".format(birthday)), "w") as f:
+            json.dump(birthday_grouped_trie_to_voter_id[birthday], f, separators=(',', ':'))
 
-
-
-field_names = [ 'countycode', 'voterid', 'namelast', 'namesuffix', 'namefirst', 'namemiddle', 'withheld', 'residenceline1', 'residenceline2', 'residencecity', 'residenceUNKNOWNDATA', 'residencezipcode', 'mailingline1', 'mailingline2', 'mailingline3', 'mailingcity', 'mailingUNKNOWNDATA', 'mailingzipcode', 'mailingcountry', 'gender', 'race', 'birthdate', 'registrationdate', 'party', 'precinct', 'precinctgroup', 'precinctsplit', 'precinctsuffix', 'voterstatus', 'congressionaldictrict', 'schoolboarddistrict', 'districtUNKNOWNDATA1', 'districtUNKNOWNDATA2', 'districtUNKNOWNDATA3', 'phoneareacode', 'phonenumber', 'phonenumberext', 'emailaddress']
-registration = namedtuple("registration", field_names)
 
 
 if __name__ == "__main__":

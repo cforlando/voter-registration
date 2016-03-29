@@ -1,24 +1,2 @@
 #!/usr/bin/make -f
 
-all: test-right-location data/trie-to-voterid-stamp data/voterid-lookup-stamp
-
-test-right-location:
-	@echo Making sure this is run from the base directory...
-	@test -d data-generation
-	@echo good.
-
-data-temporary:
-	mkdir $@
-
-data-temporary/stamp: INDEX_URL := http://flvoters.com/download/20160229.html
-data-temporary/stamp: data-temporary
-	set -e; wget -nv -O - $(INDEX_URL) |grep \\.txt\" |cut -d\" -f2 | { while read countyurl; do wget -nv -O - "$$countyurl"; done; } |data-generation/pigeonhole_lines_by_id_and_year $<
-	touch $@
-
-data/trie-to-voterid-stamp: data-temporary/stamp
-	set -e; for f in data-temporary/birthyears-*; do data-generation/construct_trie data <$$f; done
-	touch $@
-
-data/voterid-lookup-stamp: data-temporary/stamp
-	set -e; for f in data-temporary/voterids-*; do data-generation/construct_voterid_lookup data $$f <$$f; done
-	touch $@
