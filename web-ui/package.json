@@ -1,0 +1,22 @@
+{
+  "name": "quicodesfor-voter-register",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=4.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.0.0-alpha.2",
+    "handlebars": "^4.0.5",
+    "hapi": "^13.3",
+    "inert": "^3.2",
+    "jquery": "^2.2.3",
+    "rx": "^4.1.0",
+    "sprintf-js": "^1.0",
+    "tether": "^1.2.0",
+    "vision": "^4.1"
+  }
+}
