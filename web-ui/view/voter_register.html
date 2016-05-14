@@ -1,0 +1,91 @@
+<script src="node/jquery/sizzle/dist/sizzle.min.js"></script>
+<script src="node/jquery/dist/jquery.min.js"></script>
+<script src="node/tether/dist/js/tether.min.js"></script>
+<script src="node/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="node/rx/dist/rx.all.min.js"></script>
+<script src="node/sprintf-js/dist/sprintf.min.js"></script>
+<script src="res/script/voterRegister.js"></script>
+<link rel='stylesheet' href="node/bootstrap/dist/css/bootstrap.min.css" />
+<style>
+  .container-fluid {
+    margin-top: 32px;
+    max-width: 900px;
+  }
+
+  .container-fluid >* {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .container-fluid >*:not(:first-child) {
+    margin-left: 16px;
+  }
+
+  .container-fluid > * {
+    width: 40%;
+    max-width: 400px;
+  }
+
+  .form-control,
+  button.btn {
+    border: 0;
+  }
+
+  #text-display > * {
+    line-height: 1.5;
+  }
+
+  #filter-list > li {
+    white-space: pre-wrap;
+    cursor: pointer;
+  }
+</style>
+
+<div class='container-fluid'>
+  <div>
+    <div class="card">
+      <div id='text-display' class="card-block">
+        <h4 id='name-display' class="card-title">Name</h4>
+        <p id='address-display' class="card-text">Address</p>
+        <h5 id='party-display' class='card-text'>Party not selected</h5>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <input class='form-control' name='name' placeholder='name' />
+        </li>
+        <li class="list-group-item">
+          <input class='form-control' name='date-of-birth' placeholder='date of birth' />
+        </li>
+        <li class="list-group-item">
+          <textarea class='form-control' name='address' placeholder="address"></textarea>
+        </li>
+      </ul>
+      <div class="card-block">
+        <div class="dropdown">
+          <button id="partyDropdown" class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Change party
+          </button>
+          <div class="dropdown-menu" aria-labelledby="partyDropdown">
+            <a class='dropdown-item' href='#' data-code='AIP'>American’s Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='CPF'>Constitution Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='DEM'>Florida Democratic Party</a>
+            <a class='dropdown-item' href='#' data-code='ECO'>Ecology Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='GRE'>Green Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='IDP'>Independence Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='INT'>Independent Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='LPF'>Libertarian Party of Florida</a>
+            <a class='dropdown-item' href='#' data-code='NPA'>No Party Affiliation</a>
+            <a class='dropdown-item' href='#' data-code='PSL'>Party for Socialism and Liberation - Florida</a>
+            <a class='dropdown-item' href='#' data-code='REF'>Reform Party</a>
+            <a class='dropdown-item' href='#' data-code='REP'>Republican Party of Florida</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button id='submit' type="button" class="btn btn-primary">Submit</button>
+  </div>
+  <div id='filter-card' class="card" style='display:none'>
+    <ul id='filter-list' class="list-group list-group-flush"></ul>
+  </div>
+</div>
